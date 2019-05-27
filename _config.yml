@@ -1,3 +1,4 @@
 theme: jekyll-theme-cayman
 title: Stock Price Prediction with Regression and LSTM
 Author: Felix Le Hong Phuoc
+Description: This project presents two methods of how to predict a timeseries composed of real values. Specifically, we will predict the stock price of a large company listed on the NYSE stock exchange given its historical performance by using two type of models: regression and LSTM (long short-term memory) 
