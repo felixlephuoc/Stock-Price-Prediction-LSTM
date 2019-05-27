@@ -538,14 +538,6 @@ stock_values = fetch_stock_price(symbol, datetime.date(2014,1,1), datetime.date(
 . . .
 ```
 
-
-      File "<ipython-input-1-90b48fc6a977>", line 1
-        . . .
-        ^
-    SyntaxError: invalid syntax
-
-
-
 All the other settings remains unchanged. After running the tensorflow session, here is the new output:
 
 ```JSON
