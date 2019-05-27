@@ -1,12 +1,29 @@
 
-<div style="text-align: justify" markdown="1">
 # Overview
 
+<div style="text-align: justify" markdown="1">
 
-# I. Prepare the input dataset
-## 1. Download the dataset
-The first step of this  project is to obtain the historical data of stock price. Financial data can be expensive and hard to extract, that's why in this eperiment we use the Python library `quandl` to obtain such information. This library has been chosen since it is easy to use and it provides a limited number of free queries per day. Quandl is an API,and the Python library is a wrapper over the APIs. To see a sample data returned by this API, run the folowing command in our prompt:
+This project presents two methods of how to predict a timeseries composed of real values. Specifically, we will predict the stock price of a large company listed on the NYSE stock exchange given its historical performance by using two type of models: regression and LSTM (long short-term memory).
 
+# Table of contents
+
+I. [**Prepare the input dataset**](#prepare_input)
+ 1. [Download the dataset](#download_dataset)
+ 2. [Format the dataset](#format_dataset)
+ 3. [Visualize the dataset](#visualize_dataset)
+ 
+II. [**Stock Price Prediction**](#stock_price_prediction)
+ 1. [Functions to evaluate model](#functions_evaluate_model)
+ 2. [Linear Regression Model](#linear regression)
+ 3. [Long Short-Term Memory Model](#lstm) <br />
+    3.1. [Introduction of LSTM](#introduction_lstm)<br />
+     3.2. [Stock Price Prediction using LSTM](#stock_price_prediction_lstm)
+
+
+
+# I. Prepare the input dataset <a name="prepare_input"></a>
+## 1. Download the dataset <a name="download_dataset"></a>
+The first step of this  project is to obtain the historical data of stock price. Financial data can be expensive and hard to extract, that's why in this experiment we use the Python library `quandl` to obtain such information. This library has been chosen since it is easy to use and it provides a limited number of free queries per day. Quandl is an API,and the Python library is a wrapper over the APIs. To see a sample data returned by this API, run the folowing command in your prompt:
 
 ```JSON
 curl "https://www.quandl.com/api/v3/datasets/WIKI/FB/data.csv"
@@ -76,6 +93,22 @@ def fetch_stock_price(symbol, from_date, to_date, che_path="./tmp/prices/"):
     return prices
 ```
 
+
+    ---------------------------------------------------------------------------
+
+    ModuleNotFoundError                       Traceback (most recent call last)
+
+    <ipython-input-4-30c9fb8e0953> in <module>()
+          1 import os
+          2 import pickle
+    ----> 3 import quandl
+          4 import numpy as np
+          5 
+
+
+    ModuleNotFoundError: No module named 'quandl'
+
+
 The returned object of the function `fetch_stock_price` is a mono-dimensional array, containing the stock price for the requested symbol, ordered from the *from_date* to the *to_date*. Caching is done within the funciton, which means if a cache is missed, then the *quandl* API is called. The `date_obj_to_str` function is just a helper function, to convert *datetime.date* to the correct string format needed for the API.
 
 To validate the `fetch_stock_price` function, let's print the adjusted price of the Google stock price (whose symbol is GOOG) for January 2018:
@@ -91,9 +124,9 @@ The output, which is the stock price of Google in January 2018, is shown below:
 [786.14, 786.9, 794.02, 806.15, 806.65, 804.79, 807.91, 806.36, 807.88, 804.61, 806.07, 802.175, 805.02, 819.31,823.87, 835.67, 832.15, 823.31, 802.32, 796.79]
 ```
 
-## 2. Format the dataset
+## 2. Format the dataset <a name="format_dataset"></a>
 
-In order to feed in the machine-learning models, the input data needs to be in the form of multiple observations with a number of feature size. Since timeseries data is mono-dimensional array, we don't have a such pre-defined length. Therfore, instead of varying the number of features, we will change the number of observations, maintaining a constant feature size. Each observation represents a temporal window of the timeseries, and by sliding the window of one position on the right, we create another observation. Here is the code to do so (still in `tools.py` script):
+In order to feed in the machine-learning models, the input data needs to be in the form of multiple observations with a number of feature size. Since timeseries data is mono-dimensional array, we don't have a such pre-defined length. Therefore, instead of varying the number of features, we will change the number of observations, maintaining a constant feature size. Each observation represents a temporal window of the timeseries, and by sliding the window of one position on the right, we create another observation. Here is the code to do so (still in `tools.py` script):
 
 
 ```python
@@ -113,9 +146,9 @@ def matrix_to_array(m):
     return np.asarray(m).reshape(-1)
 ```
 
-Given the timeseries, and the feature size, the function creates a sliding window which sweeps the timeseries, producing features and labels (that is, the value following the end of sliding window, at each iteration). Finally, all the observations are pile up vertically, as well as the labels. The outcome is an observation with a defined number of columns, and a label vector
+Given the timeseries, and the feature size, the function creates a sliding window which sweeps the timeseries, producing features and labels (that is, the value following the end of sliding window, at each iteration). Finally, all the observations are piled up vertically, as well as the labels. The outcome is an observation with a defined number of columns, and a label vector.
 
-## 3. Visualize the dataset
+## 3. Visualize the dataset <a name="visualize_dataset"></a>
 
 Lets' visualize the stock prices of some most popular companies in the United States in two years: 2015 and 2016. Feel free to change the **symbols** and **date** to visualize your favorite company'stocks in different time period.
 
@@ -137,13 +170,14 @@ plt.show()
 ```
 
 The plot is shown below:
+
 ![US_stock_prices_2015_2016](./graph/stock_prices_2015_2016.png)
 
-# II. Stock Prices Prediction using Regression
+# II. Stock Prices Prediction <a name="stock_price_prediction"></a>
 Given the observation matrix and a real value label, we first approach the problem as a regression problem. However, this approach is not ideal in the case of timeseries data. Treating the problem as a regression problem, we force the algorithm to think that they each feature is independent, while instead, they are correlated, since they are the window of the same timeseries. Anyway, let's start with this simple assumption (each feature is independent),and see later how it can be improved by exploiting the temporal correlation.
 
-## 1. Functions to evaluate model
-In order to evaluate the model, we create a function that, given the observation matrix, the true labels, and the predicted ones, will output the metrics in term of **mean_square_error (MSE)** and **mean absolute error (MAE)** of the prediction. It will also plot the training, testing, and predicted timeseries one onto another, to visually check the performance. The function is put into the `evaluate_ts.py` file, so other scripts can access it:
+## 1. Functions to evaluate model <a name="function_evaluate_model"></a>
+In order to evaluate the model, we first create a function that, given the observation matrix, the true labels, and the predicted ones, will output the metrics in term of **mean_square_error (MSE)** and **mean absolute error (MAE)** of the prediction. It will also plot the training, testing, and predicted timeseries one onto another, to visually check the performance. The function is put into the `evaluate_ts.py` file, so other scripts can access it:
 
 
 ```python
@@ -179,10 +213,9 @@ def evaluate_ts(features, y_true, y_pred):
 
 In order to compare the result, we also include the benchmark metrics when no model is used for prediction in the function above. It means that the day-after stock value is simply predicted as the value of present day (in the stock market, this means that the price of stock for tomorrow is predicted the same as the price that stock has today)
 
-## 2. Linear Regression Model
+## 2. Linear Regression Model <a name="linear_regression"></a>
+Now, it's time to move to the modelling phase. The following code are put inside the `regression_stock_price.py`. Let's start with some imports and with the seed for `numpy` and `tensorflow`:
 
-
-Now, it's time to move to the modelling phase. The following code are put inside the `regression_stock_price.py`. Let's start with some imports and with the seed for `numpy` and `tensorflow`
 
 
 ```python
@@ -197,7 +230,7 @@ tf.reset_default_graph() # Clear the default graph and resets the global default
 tf.set_random_seed(101)
 ```
 
-The next step is to create the stock price dataset and transform it into an observation matrix. In this example, we use 20 as feature size, since it's roughly equivalent to the working days in a month. The regression problem has now shaped this way: given the 20 values of the cosine in the past, forecast the next day value.
+The next step is to create the stock price dataset and transform it into an observation matrix. In this example, we use 20 as feature size, since it's roughly equivalent to the working days in a month. The regression problem has now shaped this way: given the 20 values of the stock price in the past, forecast the next day value.
 
 Let's use the Apple's stock price in this example, whose symbol is **AAPL**. We have one year of training data (2015) which will be used to predict the stock price for the whole year of 2016:
 
@@ -326,18 +359,21 @@ Training performance and testing performance are quite similar, therefore we're 
 The MAE here can be interpreted as dollars. With a learned, we would have predicted on average one dollar (**1.0663399**) closer to the real price in the day after. Meanwhile, without any learned, the cost is nine times higher (**9.082401**). 
 
 Let's visualize the predicted values versus the real values on test set:
+
 ![predicted_vs_real_regression](./graph/regression/predicted_vs_real_values_test_set.png)
 
 Here is absolute error, with the trend line (dotted):
+
 ![abs_error_trendline](./graph/regression/predictions_error_trendline.png)
 
 And finally, the real and predicted value in both the train and test set:
+
 ![predictions_on_train_test](./graph/regression/prediction_on_train_test_set.png)
 
 Even a simple regression algorithm can achieve such an impressive result. However, as mention in the beginning, this approach is not ideal since each feature is treated as independent. In the next section, we will discover how to exploit the correlation between features to peform better.
 
-# III. Stock Price Prediction using Long short-term memory - LSTM 101
-## 1. LSTM Model
+## 3. Long Short-Term Memory Model <a name="lstm"></a>
+### 3.1 Introduction of LSTM <a name="introduction_lstm"></a>
 
 **Long Short-Term Memory (LSTM)** model is a special case of RNNs, Recurrent Neural Networks. Basically, RNN works on sequential data: they accept multidimensional signals as input, and they produce a multidimensional output signal. Thanks to this configuration, each output is not just a function of the inputs in its own stage, but depends also on the output of the previous stages. It ensures that each input influences all the following outputs, or, on the other side, an output is a function of all the previous and current stages inputs. A simple illustration of RNNs is  shown in the figure below, wherer the inputs are in the bottom and the outputs in the top:
 ![RNN](./graph/rnn/RNN.jpg)
@@ -349,7 +385,7 @@ Specificaly, the LSTM models have two outputs for each stage: one is the actual 
 
 For a more detailed description about RNNs and LSTMs, please refer to this [link](https://towardsdatascience.com/recurrent-neural-networks-and-lstm-4b601dd822a5).
 
-## 2. Stock Price Prediction using LSTM 
+### 3.2 Stock Price Prediction using LSTM <a name="stock_price_prediction_lstm"></a>
 By using LSTM, we can exploit the temporal redundancy contained in our signal. Unlike regression, LSTM need a three dimensional signal as input. Therfore, we need to reformat the observation matrix into a 3D tensor, with three axes:
 
 * The first containing the samples
@@ -523,6 +559,14 @@ stock_values = fetch_stock_price(symbol, datetime.date(2014,1,1), datetime.date(
 . . .
 ```
 
+
+      File "<ipython-input-1-90b48fc6a977>", line 1
+        . . .
+        ^
+    SyntaxError: invalid syntax
+
+
+
 All the other settings remains unchanged. After running the tensorflow session, here is the new output:
 
 ```JSON
@@ -572,6 +616,13 @@ The trend looks very nice, it goes down until it reaches a plateau. Also, let's 
 
 ![lstm_graph](./graph/LSTM_graph.png)
 
+And that's the end of the project.
 </div>
 
+</div>
 
+</div>
+
+</div>
+
+</div>
