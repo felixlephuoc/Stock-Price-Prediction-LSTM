@@ -1,8 +1,5 @@
 
 # Overview
-
-<div style="text-align: justify" markdown="1">
-
 This project presents two methods of how to predict a timeseries composed of real values. Specifically, we will predict the stock price of a large company listed on the NYSE stock exchange given its historical performance by using two type of models: regression and LSTM (long short-term memory).
 
 # Table of contents
@@ -14,13 +11,14 @@ I. [**Prepare the input dataset**](#prepare_input)
  
 II. [**Stock Price Prediction**](#stock_price_prediction)
  1. [Functions to evaluate model](#functions_evaluate_model)
- 2. [Linear Regression Model](#linear regression)
+ 2. [Linear Regression Model](#linear_regression)
  3. [Long Short-Term Memory Model](#lstm) <br />
     3.1. [Introduction of LSTM](#introduction_lstm)<br />
      3.2. [Stock Price Prediction using LSTM](#stock_price_prediction_lstm)
 
 
 
+<div style="text-align: justify" markdown="1">
 # I. Prepare the input dataset <a name="prepare_input"></a>
 ## 1. Download the dataset <a name="download_dataset"></a>
 The first step of this  project is to obtain the historical data of stock price. Financial data can be expensive and hard to extract, that's why in this experiment we use the Python library `quandl` to obtain such information. This library has been chosen since it is easy to use and it provides a limited number of free queries per day. Quandl is an API,and the Python library is a wrapper over the APIs. To see a sample data returned by this API, run the folowing command in your prompt:
@@ -41,7 +39,6 @@ Date,Open,High,Low,Close,Volume,Ex-Dividend,Split Ratio,Adj. Open,Adj. High,Adj.
 The format is a CSV, and each line contains the date, the opening price, the highest and the lowest of the day, the closing , the adusted, and some volumes. The lines are sorted from the most recent to the least. The columns we are intested in is the **Adj. Close**, which is the closing price after adjustment. 
 
 Let's build a Python function to extract the adjusted price using the Quandl APIs. The function we are looking for should be able to cache calls and specify an initial and final timestamp to get the historical data beyond the symbol. Here's the code to do so, which is put in the `tools.py` script:
-
 
 ```python
 import os
@@ -92,27 +89,9 @@ def fetch_stock_price(symbol, from_date, to_date, che_path="./tmp/prices/"):
 
     return prices
 ```
-
-
-    ---------------------------------------------------------------------------
-
-    ModuleNotFoundError                       Traceback (most recent call last)
-
-    <ipython-input-4-30c9fb8e0953> in <module>()
-          1 import os
-          2 import pickle
-    ----> 3 import quandl
-          4 import numpy as np
-          5 
-
-
-    ModuleNotFoundError: No module named 'quandl'
-
-
 The returned object of the function `fetch_stock_price` is a mono-dimensional array, containing the stock price for the requested symbol, ordered from the *from_date* to the *to_date*. Caching is done within the funciton, which means if a cache is missed, then the *quandl* API is called. The `date_obj_to_str` function is just a helper function, to convert *datetime.date* to the correct string format needed for the API.
 
 To validate the `fetch_stock_price` function, let's print the adjusted price of the Google stock price (whose symbol is GOOG) for January 2018:
-
 
 ```python
 print(fetch_stock_price("GOOG", datetime.date(2018,1,1), datetime.date(2018,1,31)))
@@ -617,12 +596,4 @@ The trend looks very nice, it goes down until it reaches a plateau. Also, let's 
 ![lstm_graph](./graph/LSTM_graph.png)
 
 And that's the end of the project.
-</div>
-
-</div>
-
-</div>
-
-</div>
-
 </div>
