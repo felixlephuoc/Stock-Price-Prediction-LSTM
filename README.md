@@ -1,7 +1,7 @@
 <div style="text-align: justify" markdown="1">
 
 # Overview
-This project presents two methods of how to predict a timeseries composed of real values. Specifically, we will predict the stock price of a large company listed on the NYSE stock exchange given its historical performance by using two type of models: regression and LSTM (long short-term memory).
+This project presents two methods of how to predict a timeseries composed of real values. Specifically, we will predict the stock price of a large company listed on the NYSE stock exchange given its historical performance by using two type of models: Regression and LSTM (long short-term memory).
 
 # Table of contents
 
@@ -301,10 +301,7 @@ with tf.Session() as sess:
     plt.show()
 ```
 
-
-```python
 The output after running the script should look like this:
-```
 
 ```JSON
 Training iteration 0 MSE 100820.46
