@@ -1,3 +1,4 @@
+<div style="text-align: justify" markdown="1">
 
 # Overview
 This project presents two methods of how to predict a timeseries composed of real values. Specifically, we will predict the stock price of a large company listed on the NYSE stock exchange given its historical performance by using two type of models: regression and LSTM (long short-term memory).
@@ -18,7 +19,6 @@ II. [**Stock Price Prediction**](#stock_price_prediction)
 
 
 
-<div style="text-align: justify" markdown="1">
 # I. Prepare the input dataset <a name="prepare_input"></a>
 ## 1. Download the dataset <a name="download_dataset"></a>
 The first step of this  project is to obtain the historical data of stock price. Financial data can be expensive and hard to extract, that's why in this experiment we use the Python library `quandl` to obtain such information. This library has been chosen since it is easy to use and it provides a limited number of free queries per day. Quandl is an API,and the Python library is a wrapper over the APIs. To see a sample data returned by this API, run the folowing command in your prompt:
@@ -537,14 +537,6 @@ train_size = 504
 stock_values = fetch_stock_price(symbol, datetime.date(2014,1,1), datetime.date(2016,12,31))
 . . .
 ```
-
-
-      File "<ipython-input-1-90b48fc6a977>", line 1
-        . . .
-        ^
-    SyntaxError: invalid syntax
-
-
 
 All the other settings remains unchanged. After running the tensorflow session, here is the new output:
 
